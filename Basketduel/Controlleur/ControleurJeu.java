@@ -2,11 +2,9 @@ package Controlleur;
 
 import Modele.Ballon;
 import Modele.Bonus;
-import Modele.IntelligenceArtificielle; // Méthodes statiques
 import Modele.Panier;
 import Modele.Terrain;
 import Modele.Partie; // Ajout de la partie
-import Modele.Joueur; // Ajout du joueur
 import java.util.List;
 
 public class ControleurJeu {
@@ -20,9 +18,10 @@ public class ControleurJeu {
     private Panier panier;
     private List<Bonus> bonusList;
 
-    private final Partie partie; // On utilise l'objet Partie centralisé
+    private final Partie partie;
     private int tourCourant;
     private final int toursTotal;
+    private final int nbr_de_pts;
 
     private boolean partieTerminee;
     private double facteurTrajectoireProchainTir;
@@ -38,9 +37,9 @@ public class ControleurJeu {
     private double jaugePuissance;
     private static final double VITESSE_JAUGE = 0.7;
     private int sensOscillation;
-    private final int niveauIA; // On stocke juste le niveau en int
+    private final int niveauIA;
 
-    public ControleurJeu(int largeurFenetre, int hauteurFenetre, int niveauIA, int toursTotal, Partie partie) {
+    public ControleurJeu(int largeurFenetre, int hauteurFenetre, int niveauIA, int toursTotal, int nbr_de_pts, Partie partie) {
         this.terrain = new Terrain(largeurFenetre, hauteurFenetre);
         
         // On récupère le joueur actif et son ballon depuis la partie
@@ -50,6 +49,7 @@ public class ControleurJeu {
 
         this.tourCourant = 1;
         this.toursTotal = toursTotal;
+        this.nbr_de_pts = nbr_de_pts;
         this.partieTerminee = false;
 
         this.facteurTrajectoireProchainTir = 1.0;
@@ -144,7 +144,7 @@ public class ControleurJeu {
         double px = panier.getX();
         double py = panier.getY();
 
-        // CORRECTION : Le panier cherche à intercepter le ballon (va vers lui)
+        
         if (bx > px) { panier.deplacerDroite(vitesse); } else { panier.deplacerGauche(vitesse); }
         if (by > py) { panier.deplacerBas(vitesse); } else { panier.deplacerHaut(vitesse); }
     }
@@ -158,7 +158,6 @@ public class ControleurJeu {
     }
 
     private void finDeTir() {
-        // Utilise la méthode qu'on a créée ensemble dans Partie.java !
         partie.resetBallonPartie(); 
         facteurVitessePanier = 1.0;
 
@@ -167,7 +166,7 @@ public class ControleurJeu {
         jaugePuissance = 0.0;
         sensOscillation = 1;
 
-        if (tourCourant >= toursTotal) {
+        if (tourCourant >= toursTotal || partie.verifierwiner(partie.getJoueurActif(), nbr_de_pts)) {
             partieTerminee = true;
         } else {
             tourCourant++;
@@ -181,8 +180,11 @@ public class ControleurJeu {
         this.bonusList = terrain.genererBonus(panier, nb_bonus_par_tour);
     }
 
-    // Getters (pour la Vue)
 
+
+    public int getNiveauIA() {
+    	return this.niveauIA;
+    }
     public Terrain getTerrain() {
         return terrain;
     }
@@ -200,11 +202,7 @@ public class ControleurJeu {
     }
 
     public int getScoreJoueur() {
-        return scoreJoueur;
-    }
-
-    public int getScoreIA() {
-        return scoreIA;
+        return partie.getJoueurActif().getScore();
     }
 
     public int getTourCourant() {
@@ -223,7 +221,6 @@ public class ControleurJeu {
         return facteurTrajectoireProchainTir;
     }
 
-    // --- Getters système de visée (utilisés par TerrainVue) ---
 
     public PhaseVisee getPhaseVisee() {
         return phaseVisee;
