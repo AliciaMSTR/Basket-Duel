@@ -1,236 +1,147 @@
 package Controlleur;
 
-import Modele.Ballon;
-import Modele.Bonus;
-import Modele.Panier;
-import Modele.Terrain;
-import Modele.Partie; // Ajout de la partie
+import Modele.*;
 import java.util.List;
 
 public class ControleurJeu {
-    private static final int nb_bonus_par_tour = 3;
-    private static final double vitesse_panier_base = 3.0;
-    private static final double puissance_max = 1200.0;
-    private static final double puissance_min = 100.0;
 
     private final Terrain terrain;
+    private final Partie partie;
     private final Ballon ballon;
+    private final ReseauManager reseau;
+
     private Panier panier;
     private List<Bonus> bonusList;
 
-    private final Partie partie;
-    private int tourCourant;
     private final int toursTotal;
-    private final int nbr_de_pts;
+    private final int pointsVictoire;
+    private int tourCourant = 1;
 
-    private boolean partieTerminee;
-    private double facteurTrajectoireProchainTir;
-    private double facteurVitessePanier;
+    private boolean partieTerminee = false;
 
-    public enum PhaseVisee {
-        VISEE, PUISSANCE, TIR
-    }
+    public enum PhaseVisee { VISEE, PUISSANCE, TIR }
+    private PhaseVisee phase = PhaseVisee.VISEE;
 
-    private PhaseVisee phaseVisee;
-    private double angleCourant;
-    private static final double VITESSE_ROTATION = 90.0;
-    private double jaugePuissance;
+    private double angle = 10;
+    private double puissance = 0;
+    private int sens = 1;
+
+    private static final double VITESSE_ROT = 90.0;
     private static final double VITESSE_JAUGE = 0.7;
-    private int sensOscillation;
-    private final int niveauIA;
+    private static final double P_MIN = 100;
+    private static final double P_MAX = 1200;
 
-    public ControleurJeu(int largeurFenetre, int hauteurFenetre, int niveauIA, int toursTotal, int nbr_de_pts, Partie partie) {
-        this.terrain = new Terrain(largeurFenetre, hauteurFenetre);
-        
-        // On récupère le joueur actif et son ballon depuis la partie
+    public ControleurJeu(int w, int h, int tours, int points, Partie partie, ReseauManager reseau) {
+        this.terrain = new Terrain(w, h);
         this.partie = partie;
         this.ballon = partie.getJoueurActif().getBallon();
-        this.niveauIA = niveauIA;
+        this.reseau = reseau;
+        this.toursTotal = tours;
+        this.pointsVictoire = points;
 
-        this.tourCourant = 1;
-        this.toursTotal = toursTotal;
-        this.nbr_de_pts = nbr_de_pts;
-        this.partieTerminee = false;
-
-        this.facteurTrajectoireProchainTir = 1.0;
-        this.facteurVitessePanier = 1.0;
-
-        this.phaseVisee = PhaseVisee.VISEE;
-        this.angleCourant = 10.0;
-        this.jaugePuissance = 0.0;
-        this.sensOscillation = 1;
-
-        demarrerNouveauTour();
+        nouveauTour();
     }
+
 
     public void mettreAJour(double dt) {
         if (partieTerminee) return;
 
         if (!ballon.isEnMouvement()) {
-            switch (phaseVisee) {
-                case VISEE -> {
-                    angleCourant += VITESSE_ROTATION * sensOscillation * dt;
-                    if (angleCourant >= 85.0) { angleCourant = 85.0; sensOscillation = -1; }
-                    if (angleCourant <= 5.0) { angleCourant = 5.0; sensOscillation = 1; }
-                }
-                case PUISSANCE -> {
-                    jaugePuissance += VITESSE_JAUGE * sensOscillation * dt;
-                    if (jaugePuissance >= 1.0) { jaugePuissance = 1.0; sensOscillation = -1; }
-                    if (jaugePuissance <= 0.0) { jaugePuissance = 0.0; sensOscillation = 1; }
-                }
-                case TIR -> {}
+            if (phase == PhaseVisee.VISEE) {
+                angle += VITESSE_ROT * sens * dt;
+                if (angle >= 85) { angle = 85; sens = -1; }
+                if (angle <= 5) { angle = 5; sens = 1; }
+            }
+            if (phase == PhaseVisee.PUISSANCE) {
+                puissance += VITESSE_JAUGE * sens * dt;
+                if (puissance >= 1) { puissance = 1; sens = -1; }
+                if (puissance <= 0) { puissance = 0; sens = 1; }
             }
             return;
         }
 
         ballon.mettreAJour(dt);
 
-        if (ballon.isEnMouvement()) {
-            // Collision panier -> On passe par l'objet Joueur pour le score
-            if (panier.estTouche(ballon.getX(), ballon.getY(), Ballon.RAYON)) {
-                partie.getJoueurActif().marquerPanier(1); 
-                finDeTir();
-                return;
-            }
+        if (panier.estTouche(ballon.getX(), ballon.getY(), Ballon.RAYON)) {
+            partie.getJoueurActif().marquerPanier(1);
+            finTir();
+            return;
+        }
 
-            // Collision bonus
-            for (Bonus b : bonusList) {
-                if (b.isActif() && b.estTouche(ballon.getX(), ballon.getY(), Ballon.RAYON)) {
-                    appliquerBonus(b);
-                    b.collecter();
-                }
+        for (Bonus b : bonusList) {
+            if (b.isActif() && b.estTouche(ballon.getX(), ballon.getY(), Ballon.RAYON)) {
+                appliquer(b);
+                b.collecter();
             }
+        }
 
-            // Ballon hors terrain
-            if (terrain.ballonAtteinSol(ballon) || terrain.ballonHorsLimites(ballon)) {
-                finDeTir();
-                return;
-            }
-
-            deplacerPanierIA(dt);
+        if (terrain.ballonAtteinSol(ballon) || terrain.ballonHorsLimites(ballon)) {
+            finTir();
         }
     }
 
     public void appuyer() {
         if (ballon.isEnMouvement() || partieTerminee) return;
 
-        switch (phaseVisee) {
+        switch (phase) {
             case VISEE -> {
-                phaseVisee = PhaseVisee.PUISSANCE;
-                jaugePuissance = 0.0;
-                sensOscillation = 1;
+                phase = PhaseVisee.PUISSANCE;
+                puissance = 0;
             }
             case PUISSANCE -> {
-                double puissanceChoisie = puissance_min + jaugePuissance * (puissance_max - puissance_min);
-                double puissanceFinale = puissanceChoisie * facteurTrajectoireProchainTir;
-                puissanceFinale = Math.max(puissance_min, Math.min(puissance_max, puissanceFinale));
-
-                // On sauvegarde le tir dans le joueur et on l'exécute via la partie
-                partie.getJoueurActif().setTir(angleCourant, puissanceFinale);
+                double p = P_MIN + puissance * (P_MAX - P_MIN);
+                partie.getJoueurActif().setTir(angle, p);
                 partie.executerTir();
-                
-                facteurTrajectoireProchainTir = 1.0;
-                phaseVisee = PhaseVisee.TIR;
+                phase = PhaseVisee.TIR;
             }
-            case TIR -> {}
         }
     }
 
-    private void deplacerPanierIA(double dt) {
-        double vitesse = vitesse_panier_base * facteurVitessePanier;
-
-        double bx = ballon.getX();
-        double by = ballon.getY();
-        double px = panier.getX();
-        double py = panier.getY();
-
-        
-        if (bx > px) { panier.deplacerDroite(vitesse); } else { panier.deplacerGauche(vitesse); }
-        if (by > py) { panier.deplacerBas(vitesse); } else { panier.deplacerHaut(vitesse); }
-    }
-
-    private void appliquerBonus(Bonus b) {
-        // Le score est appliqué directement au joueur actif
+    private void appliquer(Bonus b) {
         partie.getJoueurActif().marquerPanier(b.getModificateurScore());
-
-        facteurTrajectoireProchainTir *= b.getFacteurTrajectoire();
-        facteurVitessePanier *= b.getFacteurVitessePanier();
     }
 
-    private void finDeTir() {
-        partie.resetBallonPartie(); 
-        facteurVitessePanier = 1.0;
+    private void finTir() {
 
-        phaseVisee = PhaseVisee.VISEE;
-        angleCourant = 10.0;
-        jaugePuissance = 0.0;
-        sensOscillation = 1;
-
-        if (tourCourant >= toursTotal || partie.verifierwiner(partie.getJoueurActif(), nbr_de_pts)) {
+        if (partie.getJoueurActif().getScore() >= pointsVictoire ||
+            tourCourant >= toursTotal) {
             partieTerminee = true;
-        } else {
-            tourCourant++;
-            partie.switchTour(); // Alterne les joueurs
-            demarrerNouveauTour();
+            return;
         }
+
+        partie.resetBallonPartie();
+        partie.switchTour();
+        tourCourant++;
+        phase = PhaseVisee.VISEE;
+        angle = 10;
+        puissance = 0;
+
+        nouveauTour();
     }
 
-    private void demarrerNouveauTour() {
-        this.panier = terrain.genererPanier();
-        this.bonusList = terrain.genererBonus(panier, nb_bonus_par_tour);
+    private void nouveauTour() {
+        panier = terrain.genererPanier();
+        bonusList = terrain.genererBonus(panier, 3);
     }
-
-
-
-    public int getNiveauIA() {
-    	return this.niveauIA;
-    }
-    public Terrain getTerrain() {
-        return terrain;
-    }
-
-    public Ballon getBallon() {
-        return ballon;
-    }
-
-    public Panier getPanier() {
-        return panier;
-    }
-
-    public List<Bonus> getBonusList() {
-        return bonusList;
-    }
-
-    public int getScoreJoueur() {
-        return partie.getJoueurActif().getScore();
-    }
-
+    public Terrain getTerrain() { 
+        return terrain; }
+    public Ballon getBallon() { 
+        return ballon; }
+    public Panier getPanier() { 
+        return panier; }
+    public List<Bonus> getBonusList() {0
+        return bonusList; }
     public int getTourCourant() {
-        return tourCourant;
-    }
-
-    public int getToursTotal() {
-        return toursTotal;
-    }
-
-    public boolean isPartieTerminee() {
-        return partieTerminee;
-    }
-
-    public double getFacteurTrajectoireProchainTir() {
-        return facteurTrajectoireProchainTir;
-    }
-
-
-    public PhaseVisee getPhaseVisee() {
-        return phaseVisee;
-    }
-
-    public double getAngleCourant() {
-        return angleCourant;
-    }
-
-    public double getJaugePuissance() {
-        return jaugePuissance;
-    }
+        return tourCourant; }
+    public int getToursTotal() { 
+        return toursTotal; }
+    public boolean isPartieTerminee() { 
+        return partieTerminee; }
+    public PhaseVisee getPhaseVisee() { 
+        return phase; }
+    public double getAngleCourant() { 
+        return angle; }
+    public double getJaugePuissance() { 
+        return puissance; }
+    public Partie getPartie() { return partie; }
 }
