@@ -1,19 +1,21 @@
-package vue;
+package Vue;
 
 import javax.swing.*;
 import java.awt.*;
-import controleur.Controleur;
+import Controlleur.ControleurMenu;
 
 public class MenuPrincipal extends JFrame {
 
+    private static final long serialVersionUID = 1L;
+
     private JButton boutonLocal;
-    private JButton boutonReseau;
     private JButton boutonIA;
+    private JButton boutonReseau;
     private JButton boutonQuitter;
 
-    private Controleur controleur;
+    private final ControleurMenu controleur;
 
-    public MenuPrincipal(Controleur controleur) {
+    public MenuPrincipal(ControleurMenu controleur) {
         this.controleur = controleur;
 
         setTitle("Basket Duel - Menu Principal");
@@ -39,34 +41,34 @@ public class MenuPrincipal extends JFrame {
         titre.setForeground(Color.WHITE);
         titre.setAlignmentX(Component.CENTER_ALIGNMENT);
 
-        boutonLocal = new JButton("Jouer en Local");
-        boutonReseau = new JButton("Jouer en Réseau");
-        boutonIA = new JButton("Jouer contre IA");
+        boutonLocal   = new JButton("Jouer en Local");
+        boutonIA      = new JButton("Jouer contre l'IA");
+        boutonReseau  = new JButton("Jouer en Réseau");
         boutonQuitter = new JButton("Quitter");
 
         Dimension tailleBouton = new Dimension(260, 55);
-        boutonLocal.setMaximumSize(tailleBouton);
-        boutonReseau.setMaximumSize(tailleBouton);
-        boutonIA.setMaximumSize(tailleBouton);
-        boutonQuitter.setMaximumSize(tailleBouton);
 
-        styliserBouton(boutonLocal);
-        styliserBouton(boutonReseau);
-        styliserBouton(boutonIA);
-        styliserBouton(boutonQuitter);
+        for (JButton b : new JButton[]{boutonLocal, boutonIA, boutonReseau, boutonQuitter}) {
+            b.setMaximumSize(tailleBouton);
+            styliserBouton(b);
+        }
 
         panel.add(Box.createVerticalStrut(80));
         panel.add(titre);
         panel.add(Box.createVerticalStrut(70));
+
         panel.add(boutonLocal);
         panel.add(Box.createVerticalStrut(25));
-        panel.add(boutonReseau);
-        panel.add(Box.createVerticalStrut(25));
+
         panel.add(boutonIA);
         panel.add(Box.createVerticalStrut(25));
+
+        panel.add(boutonReseau);
+        panel.add(Box.createVerticalStrut(25));
+
         panel.add(boutonQuitter);
 
-        add(panel);
+        setContentPane(panel);
     }
 
     private void styliserBouton(JButton bouton) {
@@ -79,22 +81,20 @@ public class MenuPrincipal extends JFrame {
     private void ajouterListeners() {
 
         boutonLocal.addActionListener(e -> {
-            controleur.demarrerPartieLocale();
-            this.dispose();
-        });
-
-        boutonReseau.addActionListener(e -> {
-            controleur.demarrerPartieReseau();
-            this.dispose();
+            dispose();
+            controleur.allerCreerPartie();
         });
 
         boutonIA.addActionListener(e -> {
-            controleur.demarrerPartieIA();
-            this.dispose();
+            dispose();
+            controleur.allerCreerPartie();
         });
 
-        boutonQuitter.addActionListener(e -> {
-            System.exit(0);
+        boutonReseau.addActionListener(e -> {
+            dispose();
+            controleur.allerRejoindrePartie();
         });
+
+        boutonQuitter.addActionListener(e -> controleur.quitter());
     }
 }
