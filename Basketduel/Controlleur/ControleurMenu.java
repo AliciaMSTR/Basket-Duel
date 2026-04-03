@@ -1,83 +1,132 @@
 package Controlleur;
-import Modele.Partie;
-import Modele.Joueur;
-import Modele.JoueurIA; // Import direct plus propre
-import Modele.Partie;
-import Vue.FenetrePrincipale;
 
-import Modele.Joueur;
 import Modele.Partie;
+import Modele.Joueur;
 import Modele.JoueurIA;
-import Vue.FenetrePrincipale;
+import Reseau.ReseauManager;
+import Vue.*;
 
 public class ControleurMenu {
 
-    private static final int PORT_DEFAUT   = 5000;
-    private static final int TOURS_DEFAUT  = 10; 
-    private final FenetrePrincipale fenetre;
+    private static final int PORT_DEFAUT = 5000;
+    private static final int TOURS_DEFAUT = 10;
 
-    private String  pseudoJ1       = "Joueur 1";
-    private String  pseudoJ2       = "Joueur 2";
-    private int     pointsVictoire = 5;
-    private String  modeAdversaire = "LOCAL"; 
-    private int     niveauIA       = 1;
-    private String  ipServeur      = "localhost";
-    private int     portReseau     = PORT_DEFAUT;
+    private String pseudoJoueur = "";
+    private int pointsVictoire = 10;
 
-    private Partie        partie;
+    private String mode = "LOCAL"; // LOCAL | IA | RESEAU
+
+    private String ipServeur = "localhost";
+    private int port = PORT_DEFAUT;
+
+    private Partie partie;
     private ControleurJeu controleurJeu;
-    private ReseauManager reseauManager;
+    private ReseauManager reseau;
 
-    public ControleurMenu(FenetrePrincipale fenetre) {
-        this.fenetre = fenetre;
+    public ControleurMenu() {
+        new MenuPrincipal(this);
     }
 
-    // --- Navigation ---
-    public void allerMenu() { fenetre.afficherEcran(FenetrePrincipale.ECRAN_MENU); }
-    public void allerCreerPartie() { fenetre.afficherEcran(FenetrePrincipale.ECRAN_CREER); }
-    public void allerRejoindrePartie() { fenetre.afficherEcran(FenetrePrincipale.ECRAN_REJOINDRE); }
+
+    public void allerMenu() {
+        new MenuVue(this);
+    }
+
+    public void allerCreerPartie() {
+        new CreerPartieVue(this);
+    }
+
+    public void allerRejoindrePartie() {
+        new RejoindrePartieVue(this);
+    }
 
     public void quitter() {
-        if (reseauManager != null) reseauManager.fermerConnexion(); // Nom de méthode corrigé selon ton ReseauManager
+        if (reseau != null) reseau.fermerTout();
         System.exit(0);
     }
 
-    public void validerParametres(String pseudo1, String pseudo2, int pointsVict, String mode, int niveauIA) {
-        this.pseudoJ1       = (pseudo1 == null || pseudo1.isBlank()) ? "Joueur 1" : pseudo1.trim();
-        this.pseudoJ2       = (pseudo2 == null || pseudo2.isBlank()) ? "Joueur 2" : pseudo2.trim();
-        this.pointsVictoire = Math.max(1, pointsVict);
-        this.modeAdversaire = mode;
-        this.niveauIA       = Math.max(1, Math.min(3, niveauIA));
+    public boolean validerCreationLocale(String pseudo, int points, String modeChoisi) {
+        if (pseudo == null || pseudo.isBlank()) return false;
+        if (points < 1 || points > 200) return false;
+
+        this.pseudoJoueur = pseudo.trim();
+        this.pointsVictoire = points;
+        this.mode = modeChoisi;
+
+        return true;
     }
 
-    // --- Lancement des modes ---
-    public void lancerPartieLocale() {
-        creerPartieEtControleur();
-        fenetre.setVisible(true); // Ou ta méthode spécifique pour changer de vue
+
+    public boolean validerRejoindrePartie(String pseudo, String ip, int port) {
+        if (pseudo == null || pseudo.isBlank()) return false;
+        if (ip == null || ip.isBlank()) return false;
+        if (port < 1 || port > 65535) return false;
+
+        this.pseudoJoueur = pseudo.trim();
+        this.ipServeur = ip.trim();
+        this.port = port;
+        this.mode = "RESEAU";
+        return true;
     }
 
-    private void creerPartieEtControleur() {
-        // Utilisation du constructeur de Joueur(String) corrigé
-        Joueur j1 = new Joueur(pseudoJ1);
+    private void creerPartie() {
+
+        Joueur j1 = new Joueur();
+        j1.setNom(pseudoJoueur);
+
         Joueur j2;
 
-        if ("IA".equals(modeAdversaire)) {
-            // Utilisation du constructeur de JoueurIA(String, double)
-            // On convertit le niveau (1,2,3) en facteur d'erreur (0.1, 0.2, etc.)
-            j2 = new JoueurIA(pseudoJ2, (double)niveauIA / 10.0);
+        if (mode.equals("IA")) {
+            // IA automatique 
+            j2 = new JoueurIA("IA", 1);
         } else {
-            j2 = new Joueur(pseudoJ2);
+            j2 = new Joueur();
+            j2.setNom("Adversaire");
         }
 
         this.partie = new Partie(j1, j2);
-        
-        // Initialisation du contrôleur de jeu (assure-toi que le constructeur existe dans ControleurJeu)
-        // Pour l'instant, on l'appelle simplement s'il est vide :
-        this.controleurJeu = new ControleurJeu(largeur, hauteur, niveauIA, TOURS_DEFAUT, this.partie);
 
-        // Liaison avec la vue
-        // fenetre.setPartie(this.partie); // Décommente si ces méthodes existent dans FenetrePrincipale
+        this.controleurJeu = new ControleurJeu(
+                900, 600,
+                TOURS_DEFAUT,
+                pointsVictoire,
+                this.partie,
+                this.reseau
+        );
+
+        new PartieVue(this, controleurJeu);
     }
 
-    // Getters / Setters restants...
+  
+    public void lancerPartieLocale() {
+        reseau = null;
+        creerPartie();
+    }
+
+    public boolean lancerServeur() {
+        reseau = new ReseauManager();
+        boolean ok = reseau.hebergerActif(port);
+        if (ok) creerPartie();
+        return ok;
+    }
+
+    public boolean rejoindreServeur() {
+        reseau = new ReseauManager();
+        boolean ok = reseau.rejoindrePartie(ipServeur, port);
+        if (ok) creerPartie();
+        return ok;
+    }
+
+    public void relancerPartie() {
+        if (reseau != null) reseau.fermerTout();
+        creerPartie();
+    }
+
+    public String getPseudoJoueur() { 
+        return pseudoJoueur; }
+    public int getPointsVictoire() { 
+        return pointsVictoire; }
+    public String getIpServeur() { 
+        return ipServeur; }
+    public int getPort() { return port; }
 }
