@@ -41,9 +41,9 @@ public class MenuVue extends JFrame {
         titre.setForeground(Color.WHITE);
         titre.setAlignmentX(Component.CENTER_ALIGNMENT);
 
-        boutonCreer     = bouton("Créer / Démarrer une Partie");
+        boutonCreer = bouton("Créer / Démarrer une Partie");
         boutonRejoindre = bouton("Rejoindre une Partie");
-        boutonQuitter   = bouton("Quitter");
+        boutonQuitter = bouton("Quitter");
 
         panel.add(titre);
         panel.add(Box.createVerticalStrut(60));

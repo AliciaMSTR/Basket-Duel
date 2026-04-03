@@ -3,11 +3,11 @@ package Vue;
 import javax.swing.*;
 import Controlleur.ControleurMenu;
 
-public class CreerPartieVue extends JFrame {
+public class CreePartieVue extends JFrame {
 
     private static final long serialVersionUID = 1L;
 
-    public CreerPartieVue(ControleurMenu controleur) {
+    public CreePartieVue(ControleurMenu controleur) {
 
         setTitle("Créer une Partie");
         setSize(450, 350);

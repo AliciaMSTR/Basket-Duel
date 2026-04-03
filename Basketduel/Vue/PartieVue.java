@@ -17,11 +17,15 @@ public class PartieVue extends JFrame {
         TerrainVue terrain = new TerrainVue(jeu);
         add(terrain);
 
-        Timer timer = new Timer(16, e -> {
+        Timer timer = new Timer(16, null);
+
+        timer.addActionListener(e -> {
             jeu.mettreAJour(0.016);
             terrain.repaint();
 
             if (jeu.isPartieTerminee()) {
+                // On arrête le timer avant de fermer la fenêtre, sinon il continue de tourner
+                timer.stop();
                 dispose();
                 new EcranFinVue(menu, jeu);
             }

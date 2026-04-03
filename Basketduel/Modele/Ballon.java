@@ -9,8 +9,10 @@ package Modele;
  */
 public class Ballon {
 
-    // Constante de gravité. Peut être ajustée selon l'échelle.
-    public static final double GRAVITE = 9.81;
+    // Constante de gravité adaptée à l'échelle pixel du jeu.
+    // Les vitesses sont en pixels/seconde (100–1200 px/s), donc on utilise
+    // ~100× la gravité réelle pour obtenir une parabole visible à l'écran.
+    public static final double GRAVITE = 980.0;
 
     // Rayon du ballon, utilisé pour la détection de collision.
     public static final int RAYON = 20;
@@ -58,12 +60,13 @@ public class Ballon {
      * angleDegres: Angle de tir en degrés (0° = horizontal droit).
      * puissance: Vitesse initiale v0 en pixels/seconde.
      */
+    //on decompose la vitesse initiale en composante horizontale (vx) et verticale (vy) pour suivre la physique
     public void tirer(double angleDegres, double puissance) {
         double angleRad = Math.toRadians(angleDegres);
         this.xInitial = this.x;
         this.yInitial = this.y;
         this.vx = puissance * Math.cos(angleRad);
-        this.vy = -puissance * Math.sin(angleRad); // Vers le haut sur l'écran
+        this.vy = -puissance * Math.sin(angleRad);
         this.t = 0;
         this.enMouvement = true;
     }
@@ -78,10 +81,13 @@ public class Ballon {
      *
      * dt: Durée du tick en secondes (ex : 0.016 pour ~60 FPS).
      */
+    //on calcule la nouvelle position du ballon a chaque tick en appliquant les equations de la physique parabolique
     public void mettreAJour(double dt) {
         if (!enMouvement)
             return;
+        //on accumule le temps ecoule depuis le debut du tir
         t += dt;
+        //on applique x(t) = x0 + vx*t  et  y(t) = y0 + vy*t + 0.5*g*t^2
         x = xInitial + vx * t;
         y = yInitial + vy * t + 0.5 * GRAVITE * t * t;
     }
@@ -97,6 +103,7 @@ public class Ballon {
      * yCible: Coordonnée Y du centre de la cible.
      * On retourne la distance en pixels entre les deux centres.
      */
+    //on calcule la distance entre le centre du ballon et une cible pour savoir si une collision est proche
     public double distanceA(double xCible, double yCible) {
         double dx = xCible - this.x;
         double dy = yCible - this.y;
@@ -109,6 +116,7 @@ public class Ballon {
      * La collision est avérée si la distance entre les centres est
      * inférieure ou égale à la somme des rayons.
      */
+    //on retourne vrai si la distance entre le ballon et la cible est inferieure a la somme des deux rayons
     public boolean estEnCollisionAvec(double xCible, double yCible, int rayonCible) {
         return distanceA(xCible, yCible) <= (RAYON + rayonCible);
     }
@@ -118,6 +126,7 @@ public class Ballon {
      * Remet le ballon à sa position de spawn et stoppe son mouvement.
      * Appelé après chaque fin de tir (panier marqué, sol atteint, etc.)
      */
+    //on remet le ballon a sa position de spawn et on arrete son mouvement pour le prochain tour
     public void reinitialiser(double xSpawn, double ySpawn) {
         this.x = xSpawn;
         this.y = ySpawn;
