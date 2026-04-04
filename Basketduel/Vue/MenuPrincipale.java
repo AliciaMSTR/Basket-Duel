@@ -10,9 +10,8 @@ public class MenuPrincipale extends JFrame {
 
     private static final long serialVersionUID = 1L;
 
-    private JButton boutonLocal;
-    private JButton boutonIA;
-    private JButton boutonReseau;
+    private JButton boutonCreer;
+    private JButton boutonRejoindre;
     private JButton boutonQuitter;
 
     private final ControleurMenu controleur;
@@ -41,7 +40,7 @@ public class MenuPrincipale extends JFrame {
                 Graphics2D g2 = (Graphics2D) g;
                 g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
 
-                // Dégradé vertical sombre → bleu nuit
+                // Dégradé vertical sombre -> bleu nuit
                 GradientPaint fond = new GradientPaint(
                         0, 0, new Color(10, 10, 30),
                         0, getHeight(), new Color(30, 60, 110));
@@ -71,9 +70,8 @@ public class MenuPrincipale extends JFrame {
         sousTitre.setAlignmentX(Component.CENTER_ALIGNMENT);
 
         // ── Boutons
-        boutonLocal = creerBouton("Jouer en Local", new Color(40, 120, 210));
-        boutonIA = creerBouton("Jouer contre l'IA", new Color(60, 150, 80));
-        boutonReseau = creerBouton("Jouer en Réseau", new Color(130, 70, 180));
+        boutonCreer = creerBouton("Créer une Partie", new Color(40, 120, 210));
+        boutonRejoindre = creerBouton("Rejoindre une Partie", new Color(130, 70, 180));
         boutonQuitter = creerBouton("Quitter", new Color(180, 50, 50));
 
         panel.add(Box.createVerticalStrut(40));
@@ -81,12 +79,10 @@ public class MenuPrincipale extends JFrame {
         panel.add(Box.createVerticalStrut(8));
         panel.add(sousTitre);
         panel.add(Box.createVerticalStrut(60));
-        panel.add(boutonLocal);
-        panel.add(Box.createVerticalStrut(18));
-        panel.add(boutonIA);
-        panel.add(Box.createVerticalStrut(18));
-        panel.add(boutonReseau);
-        panel.add(Box.createVerticalStrut(18));
+        panel.add(boutonCreer);
+        panel.add(Box.createVerticalStrut(25));
+        panel.add(boutonRejoindre);
+        panel.add(Box.createVerticalStrut(25));
         panel.add(boutonQuitter);
 
         // Fond global de la fenêtre
@@ -169,18 +165,14 @@ public class MenuPrincipale extends JFrame {
     }
 
     private void ajouterListeners() {
-        boutonLocal.addActionListener(e -> {
-            dispose();
-            controleur.validerCreationLocale("Joueur", 10, "LOCAL");
-            controleur.lancerPartieLocale();
-        });
-
-        boutonIA.addActionListener(e -> {
+        // Redirige vers l'interface de paramétrage (Local, IA, Hébergeur Réseau)
+        boutonCreer.addActionListener(e -> {
             dispose();
             controleur.allerCreerPartie();
         });
 
-        boutonReseau.addActionListener(e -> {
+        // Redirige vers l'interface Client pour entrer une IP et un Port existant
+        boutonRejoindre.addActionListener(e -> {
             dispose();
             controleur.allerRejoindrePartie();
         });

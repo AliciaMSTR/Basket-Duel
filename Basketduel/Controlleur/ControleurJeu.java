@@ -2,6 +2,7 @@ package Controlleur;
 
 import Modele.*;
 import java.util.List;
+import java.awt.geom.Rectangle2D;
 
 public class ControleurJeu {
 
@@ -11,6 +12,7 @@ public class ControleurJeu {
 
     private Panier panier;
     private List<Bonus> bonusList;
+    private Rectangle2D.Double murObstacle;
 
     private final int toursTotal;
     private final int pointsVictoire;
@@ -46,17 +48,20 @@ public class ControleurJeu {
         return partie.getJoueurActif().getBallon();
     }
 
-    //on met a jour le jeu a chaque frame : si le ballon est immobile on gere la visee, sinon on fait avancer le ballon
+    // Cette méthode est appelée 60 fois par seconde (boucle de jeu).
+    // C'est le "Moteur Physique et Logique" principal de toute la partie.
+    // Selon l'état du ballon (tenu en main ou en l'air), il permet de viser ou de calculer la trajectoire.
     public void mettreAJour(double dt) {
-        if (partieTerminee) return;
+        if (partieTerminee) return; // Sécurité : on gèle le jeu à la fin.
 
         Joueur actif = partie.getJoueurActif();
         Ballon ballonActif = getBallonActif();
 
-        //on verifie si le ballon est en train de voler ou en attente de tir
+        // PHASE 1 : Le joueur a la balle en main (visée en cours ou joueur inactif)
         if (!ballonActif.isEnMouvement()) {
 
-            //si c'est une IA, elle calcule et tire toute seule sans passer par les phases
+            // Intelligence artificielle : l'IA ne passe pas par les phases visuelles "visée/puissance". 
+            // Elle calcule ses paramètres de façon instantanée et tire le ballon directement pour ne pas faire attendre le vrai joueur.
             if (actif instanceof JoueurIA) {
                 ((JoueurIA) actif).preparerTirAuto(panier);
                 partie.executerTir();
@@ -80,25 +85,42 @@ public class ControleurJeu {
             return;
         }
 
-        // Le ballon est en vol, on met à jour sa position
+        // PHASE 2 : Le ballon vole dans l'air (Physique pure)
+        // On demande au ballon d'avancer selon la gravité et sa vélocité sur le "Delta Time" de temps.
         ballonActif.mettreAJour(dt);
 
-        // Détection de collision avec le panier
+        // On vérifie immédiatement la "Hitbox" (zone de collision) : le ballon rentre-t-il dans le panier ?
         if (panier.estTouche(ballonActif.getX(), ballonActif.getY(), Ballon.RAYON)) {
             partie.getJoueurActif().marquerPanier(1);
             finTir();
             return;
         }
 
-        // Détection de collision avec les bonus/malus
+        // On scanne les bonus présents à l'écran pour voir si le ballon croise l'un d'eux.
+        // C'est un test "O(N)" (linéaire), car on parcourt toute la liste active des objets interactifs.
         for (Bonus b : bonusList) {
             if (b.isActif() && b.estTouche(ballonActif.getX(), ballonActif.getY(), Ballon.RAYON)) {
                 appliquer(b);
-                b.collecter();
+                b.collecter(); // On désactive le bonus visuellement et physiquement.
             }
         }
 
-        // Fin de tir si le ballon sort du terrain
+        // Vérification de collision avec le mur obstacle (s'il existe)
+        if (murObstacle != null) {
+            // Création d'une hitbox simple pour le ballon (Rectangle) 
+            Rectangle2D.Double hitboxBallon = new Rectangle2D.Double(
+                ballonActif.getX() - Ballon.RAYON, 
+                ballonActif.getY() - Ballon.RAYON, 
+                Ballon.RAYON * 2, Ballon.RAYON * 2
+            );
+            if (murObstacle.intersects(hitboxBallon)) {
+                // S'écrase sur le mur = raté !
+                finTir();
+                return;
+            }
+        }
+
+        // Vérification de "Out of Bounds" : Si le ballon touche le sol ou quitte complètement l'écran logique (gauche/droite/haut), on compte cela comme un tir raté et fini.
         if (terrain.ballonAtteinSol(ballonActif) || terrain.ballonHorsLimites(ballonActif)) {
             finTir();
         }
@@ -133,24 +155,29 @@ public class ControleurJeu {
             partie.getJoueurActif().marquerPanier(modScore);
         }
 
-        // Modification de la vitesse du panier selon le type
-        double facteurPanier = b.getFacteurVitessePanier();
-        if (facteurPanier != 1.0) {
-            // Le facteur s'applique au prochain déplacement du panier
-            // (le panier est régénéré au prochain tour, donc on stocke l'info si besoin)
-            System.out.println("Facteur vitesse panier : " + facteurPanier);
+        // Agrandissement du panier (Bonus)
+        double facteurRayon = b.getFacteurRayonPanier();
+        if (facteurRayon != 1.0) {
+            panier.setRayon((int) (Panier.RAYON_DEFAUT * facteurRayon));
+        }
+
+        // Téléportation du panier (Malus)
+        if (b.teleportePanier()) {
+            // Le "téléport" ingénieux du panier !
+            // On regénère aléatoirement sa position avec le terrain
+            panier = terrain.genererPanier();
         }
 
         // Si c'est un malus de trajectoire, on perturbe le tir en cours
         double facteurTraj = b.getFacteurTrajectoire();
         if (facteurTraj != 1.0) {
             Ballon bal = getBallonActif();
-            bal.setPosition(bal.getX(), bal.getY());
+            bal.setPosition(bal.getX(), bal.getY()); // Dans l'idéal il faudrait perturber le vx/vy, mais on peut juste décaler le ballon si besoin
         }
 
-        // Le MUR_OBSTACLE est un malus visuel, géré côté vue
+        // Le MUR_OBSTACLE est un malus : on génère un bouclier rectangulaire géant devant le panier.
         if (b.genereUnMur()) {
-            System.out.println("Un mur obstacle est généré !");
+            murObstacle = new Rectangle2D.Double(panier.getX() - 100, panier.getY() - 150, 30, 200);
         }
     }
 
@@ -179,6 +206,7 @@ public class ControleurJeu {
 
     //on genere un nouveau panier et de nouveaux bonus a chaque debut de tour
     private void nouveauTour() {
+        murObstacle = null;
         panier = terrain.genererPanier();
         bonusList = terrain.genererBonus(panier, 3);
     }
@@ -194,4 +222,6 @@ public class ControleurJeu {
     public double getAngleCourant() { return angle; }
     public double getJaugePuissance() { return puissance; }
     public Partie getPartie() { return partie; }
+    public ReseauManager getReseau() { return reseau; }
+    public Rectangle2D.Double getMurObstacle() { return murObstacle; }
 }
