@@ -6,9 +6,6 @@ import java.util.Random;
 
 public class Terrain {
 
-    /** Constante de gravité (pixels/s²). Identique à Ballon.GRAVITE. */
-    public static final double GRAVITE = 9.81;
-
     // Dimensions du terrain
     private final int largeur;
     private final int hauteur;
@@ -47,58 +44,53 @@ public class Terrain {
         this.random = new Random();
     }
 
-    // Génération aléatoire du Panier
-    /**
-     * Génère un Panier à une position aléatoire dans la moitié droite de l'écran, à une hauteur atteignable.
-     */
+    //on tire une position aleatoire dans la moitie droite de l'ecran pour que le tir soit toujours possible
     public Panier genererPanier() {
         int marge = Panier.RAYON + 10;
         int xMin = xMinPanier + marge;
         int xMax = xMurDroit - marge;
-        int yMin = yPlafond + marge + 40; // espace sous le plafond
-        int yMax = ySol - marge - 60; // espace au-dessus du sol
+        int yMin = yPlafond + marge + 40;
+        int yMax = ySol - marge - 60;
 
         double x = xMin + random.nextInt(xMax - xMin);
         double y = yMin + random.nextInt(yMax - yMin);
 
         return new Panier(
                 x, y,
-                xMinPanier + marge, xMurDroit - marge, // limites horizontales
-                yPlafond + marge, ySol - marge // limites verticales
+                xMinPanier + marge, xMurDroit - marge,
+                yPlafond + marge, ySol - marge
         );
     }
 
-    // Génération aléatoire des Bonus
-    /**
-     * Génère une liste de bonus répartis aléatoirement dans l'espace aérien situé entre le joueur et le panier.
-     */
+    //on place les bonus dans l'espace entre le joueur et le panier en evitant les chevauchements
     public List<Bonus> genererBonus(Panier panier, int nombreMax) {
         List<Bonus> liste = new ArrayList<>();
 
-        int xMin = xSpawnBallon + 50; // À droite du spawn ballon
+        int xMin = xSpawnBallon + 50;
         int xMax = (int) panier.getX() - Panier.RAYON - MARGE_SECURITE;
         int yMin = yPlafond + Bonus.RAYON + 20;
         int yMax = ySol - Bonus.RAYON - 20;
 
         if (xMax <= xMin || yMax <= yMin)
-            return liste; // zone trop petite
+            return liste;
 
         int tentativesMax = nombreMax * 10;
         int tentatives = 0;
 
+        //on essaie de placer chaque bonus jusqu'a trouver une position valide ou atteindre le max de tentatives
         while (liste.size() < nombreMax && tentatives < tentativesMax) {
             tentatives++;
 
             double bx = xMin + random.nextInt(xMax - xMin);
             double by = yMin + random.nextInt(yMax - yMin);
 
-            // Vérification de non-chevauchement avec le panier
+            //on verifie que le bonus n'est pas trop pres du panier
             double dx = bx - panier.getX();
             double dy = by - panier.getY();
             if (Math.sqrt(dx * dx + dy * dy) < MARGE_SECURITE)
                 continue;
 
-            // Vérification de non-chevauchement avec les autres bonus
+            //on verifie que le bonus n'empiete pas sur un autre bonus deja place
             boolean chevauchement = false;
             for (Bonus b : liste) {
                 double ddx = bx - b.getX();
@@ -109,9 +101,9 @@ public class Terrain {
                 }
             }
             if (chevauchement)
-                continue; // on passe au bonus suivant
+                continue;
 
-            // Choix aléatoire du type (2/4 bonus, 2/4 malus)
+            //on choisit aleatoirement si c'est un bonus ou un malus (50/50)
             Bonus.TypeBonus type = (random.nextInt(4) < 2)
                     ? Bonus.TypeBonus.values()[random.nextInt(Bonus.TypeBonus.nbrBonus())]
                     : Bonus.TypeBonus.values()[Bonus.TypeBonus.nbrBonus() + random.nextInt(Bonus.TypeBonus.nbrMalus())];
@@ -122,18 +114,12 @@ public class Terrain {
         return liste;
     }
 
-    // Détection collision avec le sol
-    /**
-     * Vérifie si le ballon a atteint le sol (tir raté).
-     * Condition : le bas du ballon (y + rayon) dépasse ySol.
-     */
+    //on verifie si la partie basse du ballon a touche le sol, ce qui signifie que le tir est rate
     public boolean ballonAtteinSol(Ballon ballon) {
         return (ballon.getY() + Ballon.RAYON) >= ySol;
     }
 
-    /**
-     * Vérifie si le ballon a quitté les limites latérales du terrain.
-     */
+    //on verifie si le ballon est sorti du terrain par la gauche, la droite ou le dessus
     public boolean ballonHorsLimites(Ballon ballon) {
         return ballon.getX() - Ballon.RAYON < xMurGauche
                 || ballon.getX() + Ballon.RAYON > xMurDroit

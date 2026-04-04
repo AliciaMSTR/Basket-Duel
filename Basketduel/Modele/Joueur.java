@@ -4,31 +4,36 @@ public class Joueur {
     private String nom;
     private int score;
     private boolean estActif;
-    private final double x = 100.0; 
-    private final double y = 450.0;
-    
+    private final double x;
+    private final double y;
+
     private Ballon ballon;
     private double angle;
     private double puissance;
 
-    public Joueur() {
-        this.nom ="joueur";
+    public Joueur(double x, double y) {
+        this.nom = "joueur";
         this.score = 0;
         this.estActif = false;
+        this.x = x;
+        this.y = y;
         this.ballon = new Ballon(this.x, this.y);
     }
+
     public void setActif(boolean actif) {
         this.estActif = actif;
     }
+
     public void marquerPanier(int points) {
         this.score += points;
     }
-    
+
     public void setNom(String nom) {
         this.nom = nom;
     }
-    public int getScore() { 
-        return score; 
+
+    public int getScore() {
+        return score;
     }
 
     public boolean isActif() {

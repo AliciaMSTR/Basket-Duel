@@ -9,27 +9,27 @@ import java.awt.event.*;
 public class StyleUI {
 
     // Palette 
-    public static final Color FOND_SOMBRE   = new Color(12, 14, 22);
-    public static final Color FOND_MOYEN    = new Color(20, 22, 35);
-    public static final Color ORANGE_VIF    = new Color(255, 120, 0);
-    public static final Color ORANGE_HOVER  = new Color(210, 85, 0);
-    public static final Color BLEU_VIF      = new Color(30, 144, 255);
-    public static final Color BLEU_HOVER    = new Color(20, 100, 200);
-    public static final Color TEXTE_CLAIR   = new Color(210, 215, 235);
-    public static final Color TEXTE_GRIS    = new Color(120, 128, 155);
-    public static final Color VERT_BONUS    = new Color(60, 220, 100);
-    public static final Color ROUGE_MALUS   = new Color(230, 55, 75);
-    public static final Color FOND_PANNEAU  = new Color(25, 28, 44);
+    public static final Color FOND_SOMBRE = new Color(12, 14, 22);
+    public static final Color FOND_MOYEN = new Color(20, 22, 35);
+    public static final Color ORANGE_VIF = new Color(255, 120, 0);
+    public static final Color ORANGE_HOVER = new Color(210, 85, 0);
+    public static final Color BLEU_VIF = new Color(30, 144, 255);
+    public static final Color BLEU_HOVER = new Color(20, 100, 200);
+    public static final Color TEXTE_CLAIR = new Color(210, 215, 235);
+    public static final Color TEXTE_GRIS = new Color(120, 128, 155);
+    public static final Color VERT_BONUS = new Color(60, 220, 100);
+    public static final Color ROUGE_MALUS = new Color(230, 55, 75);
+    public static final Color FOND_PANNEAU = new Color(25, 28, 44);
 
     // Polices
-    public static final Font POLICE_TITRE    = new Font("Impact", Font.PLAIN, 64);
-    public static final Font POLICE_SECTION  = new Font("Impact", Font.PLAIN, 36);
-    public static final Font POLICE_BOUTON   = new Font("Arial",  Font.BOLD,  16);
-    public static final Font POLICE_LABEL    = new Font("Arial",  Font.PLAIN, 14);
-    public static final Font POLICE_LABEL_B  = new Font("Arial",  Font.BOLD,  14);
-    public static final Font POLICE_SCORE    = new Font("Impact", Font.PLAIN, 38);
-    public static final Font POLICE_MONO     = new Font("Monospaced", Font.BOLD, 28);
-    public static final Font POLICE_CODE     = new Font("Impact", Font.PLAIN, 34);
+    public static final Font POLICE_TITRE = new Font("Impact", Font.PLAIN, 64);
+    public static final Font POLICE_SECTION = new Font("Impact", Font.PLAIN, 36);
+    public static final Font POLICE_BOUTON = new Font("Arial", Font.BOLD, 16);
+    public static final Font POLICE_LABEL = new Font("Arial", Font.PLAIN, 14);
+    public static final Font POLICE_LABEL_B = new Font("Arial", Font.BOLD, 14);
+    public static final Font POLICE_SCORE = new Font("Impact", Font.PLAIN, 38);
+    public static final Font POLICE_MONO = new Font("Monospaced", Font.BOLD, 28);
+    public static final Font POLICE_CODE = new Font("Impact", Font.PLAIN, 34);
 
     // Bouton principal 
 
