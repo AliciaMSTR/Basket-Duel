@@ -70,8 +70,8 @@ java -cp bin Main
 
 * [x] **Phase 1 : Conception** (Cahier des charges, Modélisation UML, Architecture)
 * [x] **Phase 2 : Moteur Physique** (Trajectoires, Collisions)
-* [ ] **Phase 3 : Gameplay** (Tours de jeu, Scores, Bonus)
-* [ ] **Phase 4 : Réseau & IA** (Sockets, Algorithme adverse)
+* [x] **Phase 3 : Gameplay** (Tours de jeu, Scores, Bonus)
+* [x] **Phase 4 : Réseau & IA** (Sockets, Algorithme adverse)
 * [ ] **Phase 5 : Interface Graphique** (GUI)
 
 ---
