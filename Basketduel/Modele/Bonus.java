@@ -14,17 +14,17 @@ public class Bonus {
         // Bonus positifs
         POINTS_BONUS,
         TRAJECTOIRE_AIDE,
-        RALENTISSEMENT_PANIER,
+        AGRANDISSEMENT_PANIER,
 
         // Malus négatifs
         POINTS_MALUS,
         TRAJECTOIRE_GENE,
-        VITESSE_PANIER,
+        TELEPORTATION_PANIER,
         MUR_OBSTACLE;
 
         // Compteurs statiques
         public static int nbrBonus() {
-            return 3; // POINTS_BONUS, TRAJECTOIRE_AIDE, RALENTISSEMENT_PANIER
+            return 3; // POINTS_BONUS, TRAJECTOIRE_AIDE, AGRANDISSEMENT_PANIER
         }
 
         public static int nbrMalus() {
@@ -91,12 +91,14 @@ public class Bonus {
         };
     }
 
-    public double getFacteurVitessePanier() {
-        return switch (type) {
-            case VITESSE_PANIER -> 1.5;
-            case RALENTISSEMENT_PANIER -> 0.6;
-            default -> 1.0;
-        };
+    // Modificateur de taille du panier
+    public double getFacteurRayonPanier() {
+        return type == TypeBonus.AGRANDISSEMENT_PANIER ? 2.0 : 1.0;
+    }
+
+    // Informe si le malus téléporte le panier
+    public boolean teleportePanier() {
+        return type == TypeBonus.TELEPORTATION_PANIER;
     }
 
     public boolean genereUnMur() {

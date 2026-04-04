@@ -12,7 +12,7 @@ public class EcranFinVue extends JFrame {
 
     public EcranFinVue(ControleurMenu menu, ControleurJeu jeu) {
 
-        setTitle("Fin de Partie – Basket Duel");
+        setTitle("Fin de Partie");
         setSize(500, 380);
         setLocationRelativeTo(null);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -84,9 +84,9 @@ public class EcranFinVue extends JFrame {
         lblScores.setAlignmentX(Component.CENTER_ALIGNMENT);
 
         // ── Boutons
-        JButton rejouer = creerBoutonFin("🔄  Rejouer",        new Color(40, 120, 210));
-        JButton menuBtn = creerBoutonFin("🏠  Menu Principal", new Color(80, 100, 160));
-        JButton quitter = creerBoutonFin("✖   Quitter",        new Color(180, 50, 50));
+        JButton rejouer = creerBoutonFin("Rejouer", new Color(40, 120, 210));
+        JButton menuBtn = creerBoutonFin("Menu Principal", new Color(80, 100, 160));
+        JButton quitter = creerBoutonFin("Quitter", new Color(180, 50, 50));
 
         rejouer.addActionListener(e -> { dispose(); menu.relancerPartie(); });
         menuBtn.addActionListener(e -> { dispose(); menu.allerMenu(); });

@@ -9,9 +9,10 @@ package Modele;
  */
 public class Ballon {
 
-    // Constante de gravité adaptée à l'échelle pixel du jeu.
-    // Les vitesses sont en pixels/seconde (100–1200 px/s), donc on utilise
-    // ~100× la gravité réelle pour obtenir une parabole visible à l'écran.
+    // On choisit une gravité de 980 car cette dernière agit par tick de 16ms (environ 60 FPS). 
+    // Si on avait gardé 9.81 (la vraie gravité terrestre en m/s²), on n'aurait pas pu voir la parabole se former,
+    // le ballon aurait flotté extrêmement lentement (les distances étant en pixels et non en mètres).
+    // 980 pixels/s² donne une redescente réaliste à l'écran.
     public static final double GRAVITE = 980.0;
 
     // Rayon du ballon, utilisé pour la détection de collision.
@@ -49,46 +50,35 @@ public class Ballon {
     }
 
     // Méthode pour initialiser un tir
-    /**
-     * Initialise un tir parabolique à partir de l'angle (en degrés) et
-     * de la puissance (vitesse initiale v0).
-     *
-     * Décomposition du vecteur vitesse :
-     * vx = v0 * cos(angle_rad)
-     * vy = -v0 * sin(angle_rad) (signe négatif : axe Y écran vers le bas)
-     *
-     * angleDegres: Angle de tir en degrés (0° = horizontal droit).
-     * puissance: Vitesse initiale v0 en pixels/seconde.
-     */
-    //on decompose la vitesse initiale en composante horizontale (vx) et verticale (vy) pour suivre la physique
+    // Déclenchement du tir. On utilise la trigonométrie pour décomposer le vecteur de puissance (v0).
+    // vx = v0 * cos(angle) nous donne la vitesse horizontale.
+    // vy = -v0 * sin(angle) car dans Swing/AWT, l'axe Y est inversé (0 est en haut de l'écran, 600 est en bas).
+    // Si on omettait le signe négatif, le ballon serait tiré vers le sol et non vers le ciel !
     public void tirer(double angleDegres, double puissance) {
-        double angleRad = Math.toRadians(angleDegres);
+        double angleRad = Math.toRadians(angleDegres); // Les fonctions Math de Java requièrent des radians
         this.xInitial = this.x;
         this.yInitial = this.y;
         this.vx = puissance * Math.cos(angleRad);
         this.vy = -puissance * Math.sin(angleRad);
+        // On remet le chrono (t) à zéro pour commencer la courbe balistique.
         this.t = 0;
         this.enMouvement = true;
     }
 
     // Méthode pour mettre à jour la position du ballon
-    /**
-     * Met à jour la position du ballon pour un incrément de temps.
-     *
-     * Équations horaires appliquées :
-     * x(t) = x0 + vx * t
-     * y(t) = y0 + vy * t + 0.5 * g * t² (g positif car axe Y écran vers le bas)
-     *
-     * dt: Durée du tick en secondes (ex : 0.016 pour ~60 FPS).
-     */
-    //on calcule la nouvelle position du ballon a chaque tick en appliquant les equations de la physique parabolique
+    // Cette fonction est appelée très fréquemment (60 fois par seconde) par le Timer principal (PartieVue).
+    // Elle déplace le ballon le long de sa courbe parabolique parfaite grâce aux mathématiques.
     public void mettreAJour(double dt) {
         if (!enMouvement)
-            return;
-        //on accumule le temps ecoule depuis le debut du tir
+            return; // Si le ballon est à l'arrêt ou dans les mains, la physique ne l'affecte pas.
+
+        // L'accumulation de "dt" (Delta Time, généralement de 0.016s) construit le temps "t" de vol réel.
+        // Cela permet que la trajectoire soit exactement la même, même si l'ordinateur ralentit (Lag-independent).
         t += dt;
-        //on applique x(t) = x0 + vx*t  et  y(t) = y0 + vy*t + 0.5*g*t^2
+
+        // Équation horaire : la composante X évolue de manière linéaire (la vitesse horizontale ne change pas).
         x = xInitial + vx * t;
+        // Équation parabolique : la gravité affecte Y en un carré du temps, créant la redescente.
         y = yInitial + vy * t + 0.5 * GRAVITE * t * t;
     }
 
@@ -110,34 +100,6 @@ public class Ballon {
         return Math.sqrt(dx * dx + dy * dy);
     }
 
-    // Méthode pour detecter les collisions
-    /**
-     * Indique si le ballon est en collision avec une cible circulaire.
-     * La collision est avérée si la distance entre les centres est
-     * inférieure ou égale à la somme des rayons.
-     */
-    //on retourne vrai si la distance entre le ballon et la cible est inferieure a la somme des deux rayons
-    public boolean estEnCollisionAvec(double xCible, double yCible, int rayonCible) {
-        return distanceA(xCible, yCible) <= (RAYON + rayonCible);
-    }
-
-    // Méthode pour reinitialiser le ballon
-    /**
-     * Remet le ballon à sa position de spawn et stoppe son mouvement.
-     * Appelé après chaque fin de tir (panier marqué, sol atteint, etc.)
-     */
-    //on remet le ballon a sa position de spawn et on arrete son mouvement pour le prochain tour
-    public void reinitialiser(double xSpawn, double ySpawn) {
-        this.x = xSpawn;
-        this.y = ySpawn;
-        this.xInitial = xSpawn;
-        this.yInitial = ySpawn;
-        this.vx = 0;
-        this.vy = 0;
-        this.t = 0;
-        this.enMouvement = false;
-    }
-
     /** Getters et Setters */
     public double getX() {
         return x;
@@ -147,17 +109,7 @@ public class Ballon {
         return y;
     }
 
-    public double getVx() {
-        return vx;
-    }
 
-    public double getVy() {
-        return vy;
-    }
-
-    public double getT() {
-        return t;
-    }
 
     public boolean isEnMouvement() {
         return enMouvement;

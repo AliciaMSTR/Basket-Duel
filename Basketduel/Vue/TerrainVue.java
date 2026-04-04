@@ -46,39 +46,63 @@ public class TerrainVue extends JPanel {
             }
         });
     }
-
-    // ─────────────────────────────────────────────────────────────────────────
-    //  RENDU PRINCIPAL
-    // ─────────────────────────────────────────────────────────────────────────
-
+    // La méthode paintComponent est le cœur du composant graphique. 
+    // Swing appelle cette méthode de lui-même (via repaint()) à chaque fois qu'un rafraîchissement visuel est nécessaire.
     @Override
     protected void paintComponent(Graphics g) {
         super.paintComponent(g);
-        Graphics2D g2 = (Graphics2D) g;
+        // Cast en Graphics2D pour de meilleures options graphiques (rotation, scaling, antialiasing)
+        Graphics2D g2 = (Graphics2D) g.create();
 
-        // Antialiasing pour des formes lisses
+        // Antialiasing : permet de lisser les courbes (très important pour que le ballon et le panneau soient propres, sans effet 'pixel' en escalier)
         g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING,   RenderingHints.VALUE_ANTIALIAS_ON);
         g2.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
 
+        // --- GESTION DU REDIMENSIONNEMENT (SCALING) ---
+        // Notre physique de jeu (modèle) fonctionne sur un repère abstrait fixe de 900x600 pixels.
+        // Si l'utilisateur passe en plein écran, on ne modifie PAS les coordonnées de la physique
+        // (qui modifierait le temps de trajet du ballon), mais on applique un "zoom" sur la peinture de la vue.
+        double echelleX = (double) getWidth() / 900.0;
+        double echelleY = (double) getHeight() / 600.0;
+        
+        // On conserve le ratio minimum pour ne pas déformer ou étirer l'image, 
+        // ce qui va créer des bandes noires compensatoires si le format de la fenêtre n'est pas 3:2.
+        double echelle = Math.min(echelleX, echelleY);
+        
+        // Calcul du décalage (translation) pour centrer le terrain sur les axes X ou Y
+        double decX = (getWidth() - (900 * echelle)) / 2.0;
+        double decY = (getHeight() - (600 * echelle)) / 2.0;
+        
+        // On applique les transformations (d'abord déplacer, puis zoomer). Le code de rendu en dessous
+        // pourra continuer à dessiner sur la base d'une fenêtre 900x600 pure, Java fera la conversion au pixel près.
+        g2.translate(decX, decY);
+        g2.scale(echelle, echelle);
+        // ----------------------------------------------
+
+        // "anim" est une variable de temps qui tourne en boucle de façon continue en tâche de fond. 
+        // On l'ajoute légèrement à chaque tick pour faire osciller les bonus plus bas.
         anim += 0.05;
 
+        // Le dessin se fait par "couches superposées" (Painter's Algorithm).
+        // Le fond doit absolument être peint en premier, puis on superpose l'IHM et les objets par ordre d'importance visuelle.
         dessinerFond(g2);
         dessinerPanier(g2);
         dessinerBonus(g2);
+        dessinerMurObstacle(g2);
         dessinerJoueur(g2);
         dessinerBallon(g2);
 
+        // La flèche est une "aide visuelle", on la masque dès que le ballon quitte les mains du joueur pour épurer l'écran.
         if (!controleur.getBallon().isEnMouvement()) {
             dessinerFleche(g2);
         }
 
+        // Le HUD recrache toutes les informations utiles au-dessus des sprites physiques
         dessinerHUD(g2);
+
+        g2.dispose(); // Bonne pratique : désalloue le contexte cloné (g.create()) de la mémoire
     }
-
-    // ─────────────────────────────────────────────────────────────────────────
-    //  CHARGEMENT IMAGE
-    // ─────────────────────────────────────────────────────────────────────────
-
+    //Chargement image du terrain et du ballon
     private Image chargerImage(String chemin) {
         String[] tentatives = {
             chemin,
@@ -94,35 +118,33 @@ public class TerrainVue extends JPanel {
         System.err.println("Image introuvable : " + chemin);
         return null;
     }
-
-    // ─────────────────────────────────────────────────────────────────────────
-    //  FOND / TERRAIN
-    // ─────────────────────────────────────────────────────────────────────────
-
+    // On dessine l'arrière-plan du jeu. Soit une image complète, soit un dégradé de couleur en cas d'erreur de chargement.
     private void dessinerFond(Graphics2D g2) {
         if (imgTerrain != null) {
-            g2.drawImage(imgTerrain, 0, 0, getWidth(), getHeight(), null);
+            // L'image de fond s'étire sur les dimensions logiques pleines du terrain (900x600).
+            // Le "Scaling" mis en place dans paintComponent() se chargera de l'agrandir à l'écran.
+            g2.drawImage(imgTerrain, 0, 0, 900, 600, null);
         } else {
-            // Fallback dégradé si l'image est absente
+            // Fallback : On crée un dégradé (GradientPaint) pour le ciel, simulant la profondeur atmosphérique 
+            // avec un bleu foncé en haut et un peu plus clair vers l'horizon.
             GradientPaint ciel = new GradientPaint(
                     0, 0, new Color(20, 60, 120),
-                    0, getHeight() * 0.6f, new Color(40, 100, 160));
+                    0, 600 * 0.6f, new Color(40, 100, 160));
             g2.setPaint(ciel);
-            g2.fillRect(0, 0, getWidth(), getHeight());
+            g2.fillRect(0, 0, 900, 600);
 
+            // On utilise les dimensions de la physique (t.getLargeur()) pour dessiner un "sol".
             Terrain t = controleur.getTerrain();
             GradientPaint sol = new GradientPaint(
                     0, t.getYSol(), new Color(120, 80, 30),
-                    0, getHeight(), new Color(80, 50, 15));
+                    0, 600, new Color(80, 50, 15));
             g2.setPaint(sol);
             g2.fillRect(0, t.getYSol(), t.getLargeur(), t.getHauteur());
         }
     }
-
-    // ─────────────────────────────────────────────────────────────────────────
-    //  JOUEUR
-    // ─────────────────────────────────────────────────────────────────────────
-
+    // On dessine ici l'avatar du joueur (le "corps" ou lanceur de la balle).
+    // On lui applique un dégradé dynamique du haut vers le bas pour donner un léger effet de volume 3D
+    // et on le contourne en blanc pour le faire ressortir visuellement.
     private void dessinerJoueur(Graphics2D g2) {
         Partie p = controleur.getPartie();
         Joueur j = p.getJoueurActif();
@@ -148,11 +170,7 @@ public class TerrainVue extends JPanel {
 
         g2.setStroke(new BasicStroke(1));
     }
-
-    // ─────────────────────────────────────────────────────────────────────────
-    //  BALLON
-    // ─────────────────────────────────────────────────────────────────────────
-
+    //attribution de l'image du ballon
     private void dessinerBallon(Graphics2D g2) {
         Ballon b = controleur.getBallon();
         int r = Ballon.RAYON;
@@ -177,25 +195,17 @@ public class TerrainVue extends JPanel {
             g2.drawOval(bx, by, diam, diam);
         }
     }
-
-    // ─────────────────────────────────────────────────────────────────────────
-    //  PANIER (anneau + backboard)
-    // ─────────────────────────────────────────────────────────────────────────
-
+    //dessiner le panier
     private void dessinerPanier(Graphics2D g2) {
         Panier p = controleur.getPanier();
-        int r = Panier.RAYON;
+        int r = p.getRayon();
 
         g2.setColor(Color.RED);
         g2.setStroke(new BasicStroke(4));
         g2.drawOval((int) p.getX() - r, (int) p.getY() - r, r * 2, r * 2);
         g2.setStroke(new BasicStroke(1));
     }
-
-    // ─────────────────────────────────────────────────────────────────────────
-    //  BONUS / MALUS
-    // ─────────────────────────────────────────────────────────────────────────
-
+    //dessiner le bonus et le malus
     private void dessinerBonus(Graphics2D g2) {
         for (Bonus b : controleur.getBonusList()) {
             if (!b.isActif()) continue;
@@ -240,10 +250,23 @@ public class TerrainVue extends JPanel {
         }
     }
 
-    // ─────────────────────────────────────────────────────────────────────────
-    //  FLÈCHE DE VISÉE
-    // ─────────────────────────────────────────────────────────────────────────
-
+    // Dessin du mur obstacle
+    private void dessinerMurObstacle(Graphics2D g2) {
+        java.awt.geom.Rectangle2D.Double mur = controleur.getMurObstacle();
+        if (mur != null) {
+            // Effet brique transparent
+            g2.setColor(new Color(180, 50, 30, 200));
+            g2.fill(mur);
+            
+            // Contour strié rouge vif
+            g2.setColor(new Color(255, 80, 50));
+            g2.setStroke(new BasicStroke(3));
+            g2.draw(mur);
+            
+            g2.setStroke(new BasicStroke(1));
+        }
+    }
+    //dessiner la fleche de visée
     private void dessinerFleche(Graphics2D g2) {
         Ballon b = controleur.getBallon();
         double rad = Math.toRadians(controleur.getAngleCourant());
@@ -279,32 +302,32 @@ public class TerrainVue extends JPanel {
 
         g2.setStroke(new BasicStroke(1));
     }
-
-    // ─────────────────────────────────────────────────────────────────────────
-    //  HUD (scores, tours, instructions)
-    // ─────────────────────────────────────────────────────────────────────────
-
+    // Fonction chapeau qui orchestre le dessin de toute l'interface graphique (Heads Up Display).
+    // On affiche des éléments fixes par-dessus l'animation : scores, compteur de tours et instructions de la visée.
     private void dessinerHUD(Graphics2D g2) {
         Partie partie = controleur.getPartie();
         int s1 = partie.getJ1().getScore();
         int s2 = partie.getJ2().getScore();
 
-        // ── Panneau score J1 (gauche)
+        // On crée un panneau informatif en haut à gauche pour le premier joueur.
         dessinerPanneauScore(g2, 10, 8,
                 partie.getJ1().getNom(), s1,
                 new Color(40, 120, 220, 200));
 
-        // ── Panneau score J2 (droite)
+        // Panneau pour le Joueur 2. 
+        // L'utilisation d'une couleur d'arrière-plan semi-transparente (le "200" dans new Color) 
+        // permet de continuer à voir le décor du jeu en filigrane sous le texte.
         String lblJ2 = partie.getJ2().getNom() + " : " + s2;
         dessinerPanneauScore(g2, 200, 8,
                 partie.getJ2().getNom(), s2,
                 new Color(200, 60, 60, 200));
 
-        // ── Compteur de tours (centré en haut)
+        // Le compteur de tours est placé dynamiquement au milieu exact de l'écran logique (900/2 pixels).
         String lblTour = "Tour " + controleur.getTourCourant() + " / " + controleur.getToursTotal();
-        dessinerPanneauCentre(g2, lblTour, getWidth() / 2, 10, new Color(0, 0, 0, 160));
+        dessinerPanneauCentre(g2, lblTour, 900 / 2, 10, new Color(0, 0, 0, 160));
 
-        // ── Message de phase (bas de l'écran)
+        // Le texte du bas aide le joueur à comprendre dans quelle "phase" de lancer il est.
+        // Utilisation d'un 'switch' simplifié (introduit dans Java 14) pour raccourcir le code.
         String msg = switch (controleur.getPhaseVisee()) {
             case VISEE     -> MSG_VISEE;
             case PUISSANCE -> MSG_PUISSANCE;
@@ -312,13 +335,13 @@ public class TerrainVue extends JPanel {
         };
         dessinerBandeauBas(g2, msg);
 
-        // ── FIN DE PARTIE
+        //FIN DE PARTIE
         if (controleur.isPartieTerminee()) {
             dessinerEcranFin(g2);
         }
     }
 
-    /** Panneau score avec fond arrondi semi-transparent. */
+    //Panneau score avec fond arrondi semi-transparent.
     private void dessinerPanneauScore(Graphics2D g2, int x, int y,
                                       String nom, int score, Color fond) {
         String texte = nom + "  " + score + " pts";
@@ -339,7 +362,7 @@ public class TerrainVue extends JPanel {
         g2.setStroke(new BasicStroke(1));
     }
 
-    /** Petit bandeau centré (ex: compteur de tours). */
+    //Petit bandeau centré (ex: compteur de tours).
     private void dessinerPanneauCentre(Graphics2D g2, String texte, int cx, int y, Color fond) {
         g2.setFont(new Font("Arial", Font.BOLD, 14));
         FontMetrics fm = g2.getFontMetrics();
@@ -352,59 +375,54 @@ public class TerrainVue extends JPanel {
         dessinerTexteOmbre(g2, texte, x + 12, y + h - 5, Color.WHITE, new Color(0, 0, 0, 100));
     }
 
-    /** Bandeau translucide en bas avec le message de phase. */
+    // Bandeau translucide s'affichant en bas de l'écran pour dicter les instructions (Verrouiller Angle/Verrouiller Puissance).
     private void dessinerBandeauBas(Graphics2D g2, String msg) {
         int mh = 36;
-        int my = getHeight() - mh;
+        // On aligne ce bandeau parfaitement contre la bordure inférieure logique (600 pixels) du jeu.
+        int my = 600 - mh;
 
-        // Fond
+        // Le fond noir avec une opacité de 140/255 donne un bel effet 'overlay'.
         g2.setColor(new Color(0, 0, 0, 140));
-        g2.fillRect(0, my, getWidth(), mh);
+        g2.fillRect(0, my, 900, mh);
 
-        // Ligne de séparation haute
+        // Cette fine ligne jaune sert de distinction claire entre l'environnement en 3D et l'interface plate (2D).
         g2.setColor(new Color(255, 200, 50, 180));
         g2.setStroke(new BasicStroke(2));
-        g2.drawLine(0, my, getWidth(), my);
+        g2.drawLine(0, my, 900, my);
 
-        // Texte centré
+        // Affichage du message centré
         g2.setFont(new Font("Arial", Font.BOLD, 15));
         FontMetrics fm = g2.getFontMetrics();
-        int tx = getWidth() / 2 - fm.stringWidth(msg) / 2;
+        int tx = 900 / 2 - fm.stringWidth(msg) / 2;
         dessinerTexteOmbre(g2, msg, tx, my + 23, new Color(255, 220, 60), new Color(0, 0, 0, 160));
 
         g2.setStroke(new BasicStroke(1));
     }
 
-    /** Message plein écran de fin de partie avec overlay sombre. */
+    // Affiche un écran sombre bloquant tout en pleine fin de partie, 
+    // l'assombrissement force l'œil de l'utilisateur à se focaliser au milieu sur le statut de fin.
     private void dessinerEcranFin(Graphics2D g2) {
-        // Overlay semi-transparent
+        // Overlay couvrant mathématiquement tout le terrain
         g2.setColor(new Color(0, 0, 0, 160));
-        g2.fillRect(0, 0, getWidth(), getHeight());
+        g2.fillRect(0, 0, 900, 600);
 
-        // Titre
+        // Titre massif et centré
         g2.setFont(new Font("Arial", Font.BOLD, 48));
         String fin = MSG_FIN;
         FontMetrics fm = g2.getFontMetrics();
-        int fx = getWidth() / 2 - fm.stringWidth(fin) / 2;
-        dessinerTexteOmbre(g2, fin, fx, getHeight() / 2 - 20,
+        int fx = 900 / 2 - fm.stringWidth(fin) / 2;
+        dessinerTexteOmbre(g2, fin, fx, 600 / 2 - 20,
                 new Color(255, 210, 50), new Color(0, 0, 0, 200));
 
-        // Sous-titre
+        // Le sous-titre donne la marche à suivre. C'est une bonne pratique UI d'expliquer comment sortir de l'état bloquant.
         g2.setFont(new Font("Arial", Font.PLAIN, 20));
         String sous = "Appuyez sur une touche...";
         FontMetrics fm2 = g2.getFontMetrics();
         g2.setColor(new Color(200, 200, 200, 200));
-        g2.drawString(sous, getWidth() / 2 - fm2.stringWidth(sous) / 2, getHeight() / 2 + 30);
+        g2.drawString(sous, 900 / 2 - fm2.stringWidth(sous) / 2, 600 / 2 + 30);
     }
 
-    // ─────────────────────────────────────────────────────────────────────────
-    //  UTILITAIRE : texte avec ombre portée
-    // ─────────────────────────────────────────────────────────────────────────
-
-    /**
-     * Dessine un texte avec une ombre portée décalée d'1px en bas à droite.
-     * Technique simple et très lisible sur n'importe quel fond.
-     */
+    //dessiner un texte avec une ombre portée décalée d'1px en bas à droite.
     private void dessinerTexteOmbre(Graphics2D g2, String texte, int x, int y,
                                     Color couleur, Color ombre) {
         g2.setColor(ombre);

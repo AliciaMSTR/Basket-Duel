@@ -11,7 +11,9 @@ public class ControleurMenu {
     private static final int TOURS_DEFAUT = 10;
 
     private String pseudoJoueur = "";
+    private String pseudoJoueur2 = "Adversaire"; // Nouveau paramètre pour nommer le J2 (Local)
     private int pointsVictoire = 10;
+    private int toursTotalMax = TOURS_DEFAUT; // Nouveau paramètre pour la limite des tours
 
     // Mode de jeu possible : LOCAL, IA ou RESEAU
     private String mode = "LOCAL";
@@ -23,14 +25,17 @@ public class ControleurMenu {
     private ControleurJeu controleurJeu;
     private ReseauManager reseau;
 
-    //on lance l'application en affichant le menu principal dès que le contrôleur est créé
+    // Constructeur principal du Menu.
+    // L'instanciation de ce contrôleur est la première chose que fait le programme.
+    // Il crée immédiatement la fenêtre de base "MenuPrincipale" en se passant lui-même (this) en paramètre
+    // pour que la vue puiss l'invoquer lors d'un clic sur un bouton.
     public ControleurMenu() {
         new MenuPrincipale(this);
     }
 
-    //on ouvre le menu de navigation secondaire (créer ou rejoindre une partie)
+    // Ouvre (ou retourne sur) le menu de navigation principal (esthétique)
     public void allerMenu() {
-        new MenuVue(this);
+        new MenuPrincipale(this);
     }
 
     //on ouvre la fenêtre de création de partie (choix du pseudo, mode IA ou local)
@@ -49,13 +54,22 @@ public class ControleurMenu {
         System.exit(0);
     }
 
-    //on vérifie que le pseudo et le score limite sont valides avant de mémoriser les paramètres de la partie
-    public boolean validerCreationLocale(String pseudo, int points, String modeChoisi) {
+    //on vérifie que le pseudo et les limites (score/tours) sont valides avant de mémoriser les paramètres de la partie
+    public boolean validerCreationLocale(String pseudo, String pseudo2, int points, int tours, String modeChoisi) {
         if (pseudo == null || pseudo.isBlank()) return false;
+        if (modeChoisi.equals("LOCAL") && (pseudo2 == null || pseudo2.isBlank())) return false;
         if (points < 1 || points > 200) return false;
+        if (tours < 1 || tours > 100) return false;
 
         this.pseudoJoueur = pseudo.trim();
+        if (modeChoisi.equals("LOCAL")) {
+            this.pseudoJoueur2 = pseudo2.trim();
+        } else {
+            this.pseudoJoueur2 = "IA";
+        }
+        
         this.pointsVictoire = points;
+        this.toursTotalMax = tours;
         this.mode = modeChoisi;
 
         return true;
@@ -74,9 +88,10 @@ public class ControleurMenu {
         return true;
     }
 
-    //on construit les deux joueurs, on crée la Partie et le ControleurJeu, puis on ouvre la fenêtre de jeu
+    // Méthode cruciale qui instancie véritablement le monde physique et lance le Timer visuel.
+    // Elle génère les entités du Modèle (les "Joueurs" et la "Partie") avant d'ouvrir la fenêtre de Jeu.
     private void creerPartie() {
-        //on place J1 à gauche du terrain à une hauteur correspondant au sol
+        // Le joueur 1 (placé à gauche de l'écran, X=100) est à la hauteur Y=450 qui correspond au sol logique.
         Joueur j1 = new Joueur(100, 450);
         j1.setNom(pseudoJoueur);
 
@@ -84,24 +99,26 @@ public class ControleurMenu {
 
         //on crée un JoueurIA si le mode est IA, sinon un second joueur humain
         if (mode.equals("IA")) {
-            j2 = new JoueurIA("IA", 1.0, 100, 450);
+            j2 = new JoueurIA(this.pseudoJoueur2, 1.0, 100, 450);
         } else {
             j2 = new Joueur(100, 450);
-            j2.setNom("Adversaire");
+            j2.setNom(this.pseudoJoueur2);
         }
 
         this.partie = new Partie(j1, j2);
 
-        //on initialise le contrôleur de jeu avec les dimensions du terrain et les paramètres de la partie
+        // Création du "ControleurJeu", cerveau qui gèrera les collisions et la gravité tout au long de cette partie.
+        // On lui injecte une taille logique fixe de 900x600. C'est grâce à ça que la physique reste identique 
+        // peu importe si la fenêtre est redimensionnée plus tard (voir TerrainVue).
         this.controleurJeu = new ControleurJeu(
                 900, 600,
-                TOURS_DEFAUT,
+                toursTotalMax,
                 pointsVictoire,
                 this.partie,
                 this.reseau
         );
 
-        //on affiche la fenêtre de jeu
+        // Une fois l'envers du décor prêt, on allume l'écran de jeu final ("PartieVue").
         new PartieVue(this, controleurJeu);
     }
 

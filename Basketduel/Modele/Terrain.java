@@ -16,12 +16,14 @@ public class Terrain {
     private final int xMurGauche;
     private final int xMurDroit;
 
-    // Coordonnées de spawn du ballon
+    // Le point de spawn (apparition) du ballon est fixe pour garantir qu'à chaque tour, 
+    // le joueur lance depuis le même endroit, permettant l'apprentissage de la visée et la mémoire musculaire au fil des essais.
     private final int xSpawnBallon;
     private final int ySpawnBallon;
 
-    // Zone réservée au panier
-    //Le panier est toujours placé dans la moitié droite de l'écran pour garantir que le tir reste physiquement possible.
+    // Zone réservée pour la génération procédurale du panier.
+    // En le contraignant mathématiquement dans la moitié droite de l'écran (xMinPanier), 
+    // on s'assure que la cible n'est jamais générée derrière le tireur ni hors d'atteinte physique.
     private final int xMinPanier;
 
     // Marge de sécurité entre entités
@@ -44,22 +46,22 @@ public class Terrain {
         this.random = new Random();
     }
 
-    //on tire une position aleatoire dans la moitie droite de l'ecran pour que le tir soit toujours possible
+    // Cette méthode génère un panier de manière semi-aléatoire.
+    // L'aléatoire seul est risqué car il pourrait placer le panier contre un mur, le rendant impénétrable.
+    // On calcule donc des marges (le rayon du panier + espace vital) auxquelles on contraint (Math.random)
+    // les coordonnées X et Y pour que le tir reste toujours net.
     public Panier genererPanier() {
-        int marge = Panier.RAYON + 10;
+        int marge = Panier.RAYON_DEFAUT + 10;
         int xMin = xMinPanier + marge;
         int xMax = xMurDroit - marge;
         int yMin = yPlafond + marge + 40;
-        int yMax = ySol - marge - 60;
+        int yMax = ySol - marge - 60; // On garde 60 pixels de marge pour ne pas créer un panier au ras du sol
 
         double x = xMin + random.nextInt(xMax - xMin);
         double y = yMin + random.nextInt(yMax - yMin);
 
-        return new Panier(
-                x, y,
-                xMinPanier + marge, xMurDroit - marge,
-                yPlafond + marge, ySol - marge
-        );
+        // On fournit les coordonnées générées.
+        return new Panier(x, y);
     }
 
     //on place les bonus dans l'espace entre le joueur et le panier en evitant les chevauchements
@@ -67,7 +69,7 @@ public class Terrain {
         List<Bonus> liste = new ArrayList<>();
 
         int xMin = xSpawnBallon + 50;
-        int xMax = (int) panier.getX() - Panier.RAYON - MARGE_SECURITE;
+        int xMax = (int) panier.getX() - panier.getRayon() - MARGE_SECURITE;
         int yMin = yPlafond + Bonus.RAYON + 20;
         int yMax = ySol - Bonus.RAYON - 20;
 
@@ -119,11 +121,10 @@ public class Terrain {
         return (ballon.getY() + Ballon.RAYON) >= ySol;
     }
 
-    //on verifie si le ballon est sorti du terrain par la gauche, la droite ou le dessus
+    //on verifie si le ballon est sorti du terrain par la gauche ou la droite
     public boolean ballonHorsLimites(Ballon ballon) {
         return ballon.getX() - Ballon.RAYON < xMurGauche
-                || ballon.getX() + Ballon.RAYON > xMurDroit
-                || ballon.getY() + Ballon.RAYON < yPlafond;
+                || ballon.getX() + Ballon.RAYON > xMurDroit;
     }
 
     // Getters
@@ -139,25 +140,7 @@ public class Terrain {
         return ySol;
     }
 
-    public int getYPlafond() {
-        return yPlafond;
-    }
 
-    public int getXMurGauche() {
-        return xMurGauche;
-    }
-
-    public int getXMurDroit() {
-        return xMurDroit;
-    }
-
-    public int getXSpawnBallon() {
-        return xSpawnBallon;
-    }
-
-    public int getYSpawnBallon() {
-        return ySpawnBallon;
-    }
 
     @Override
     public String toString() {
