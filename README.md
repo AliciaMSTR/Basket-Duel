@@ -1,4 +1,4 @@
-# 🏀 Basket Duel
+# Basket Duel
 
 > **Jeu de sport compétitif en 2D au tour par tour.**
 > *Projet Universitaire - L3 MIAGE - 2025-2026*
