@@ -1,14 +1,9 @@
 import Controlleur.ControleurMenu;
-import javax.swing.SwingUtilities;
-
 
 public class main {
-    public static void main (String[] args) {
+    public static void main(String[] args) {
 
-        SwingUtilities.invokeLater(() -> {
-            // Création du contrôleur
-            new ControleurMenu();
+        new ControleurMenu();
 
-        });
     }
 }
