@@ -1,8 +1,5 @@
-package main;
-
-import javax.swing.SwingUtilities;
 import Controlleur.ControleurMenu;
-import Vue.MenuPrincipale;
+import javax.swing.SwingUtilities;
 
 
 public class main {
@@ -10,10 +7,8 @@ public class main {
 
         SwingUtilities.invokeLater(() -> {
             // Création du contrôleur
-            ControleurMenu controleur = new ControleurMenu();
+            new ControleurMenu();
 
-            // Affichage du menu principal
-            new MenuPrincipale(controleur);
         });
     }
 }
