@@ -1,3 +1,84 @@
+1484512 | Alicia Mestour | 2026-04-05 | Update README.md
+39c81a0 | Alicia Mestour | 2026-04-05 | Update main.java
+a05c7db | Alicia Mestour | 2026-04-05 | Update TerrainVue.java
+afcfb39 | Alicia Mestour | 2026-04-05 | Update PartieVue.java
+777b45d | Alicia Mestour | 2026-04-05 | Update MenuPrincipale.java
+70cb6e1 | Alicia Mestour | 2026-04-05 | Update EcranFinVue.java
+d331520 | Alicia Mestour | 2026-04-05 | Update main.java
+3ddfaaf | Alicia Mestour | 2026-04-04 | Merge pull request #18 from Rathissan/main
+beeb5eb | Rathissan | 2026-04-04 | Rename Rapport Projet  Basket Duel.pdf to Plan Projet Basket Duel.pdf
+259282a | Rathissan | 2026-04-04 | Remove emoji from project title in README
+52e91aa | Rathissan | 2026-04-04 | Add files via upload
+5a035c1 | Rathissan | 2026-04-04 | Add files via upload
+17ccb29 | Alicia Mestour | 2026-04-04 | Update README.md
+75cbd4f | Alicia Mestour | 2026-04-04 | Merge pull request #16 from Rathissan/main
+6d0f749 | Rathissan | 2026-04-03 | Add files via upload
+b5d6b09 | Rathissan | 2026-04-03 | Add files via upload
+fa34202 | Alicia Mestour | 2026-04-03 | Create StyleUI.java
+e8f71dc | Alicia Mestour | 2026-04-03 | Create RejoindrePartieVue.java
+247d473 | Alicia Mestour | 2026-04-03 | Create PartieVue.java
+c837aed | Alicia Mestour | 2026-04-03 | Create ParametresVue.java
+4ee397b | Alicia Mestour | 2026-04-03 | Create EcranFinVue.java
+f04468e | Alicia Mestour | 2026-04-03 | Create CreePartieVue.java
+b9e4444 | Alicia Mestour | 2026-04-03 | Create ChargementReseauVue.java
+251193d | Alicia Mestour | 2026-04-03 | Update TerrainVue.java
+fc53f92 | Alicia Mestour | 2026-04-03 | Update MenuVue.java
+3c76447 | Alicia Mestour | 2026-04-03 | Update MenuPrincipale.java
+46741e3 | Alicia Mestour | 2026-04-03 | Update ControleurMenu.java
+6559695 | Alicia Mestour | 2026-04-03 | Update ControleurJeu.java
+c7a25d2 | Alicia Mestour | 2026-03-30 | Update ControleurJeu.java
+fb17cc2 | Alicia Mestour | 2026-03-30 | Merge pull request #15 from honolulul/main
+de38164 | Alicia Mestour | 2026-03-30 | Merge branch 'main' into main
+1cebaaf | Alicia Mestour | 2026-03-29 | Update ControleurMenu.java
+5bb6c76 | Alicia Mestour | 2026-03-28 | Update and rename FenetrePrincipale.java to MenuPrincipale.java
+3cc2656 | ilyas ter | 2026-03-28 | Merge branch 'main' into main
+d44a73f | ilyas ter | 2026-03-28 | Refactor imports in ControleurMenu.java
+96efd87 | ilyas ter | 2026-03-28 | Implement ControleurMenu with game setup methods
+e3a5e60 | ilyas ter | 2026-03-28 | Refactor ControleurJeu to integrate Partie and Joueur
+7d848be | Alicia Mestour | 2026-03-28 | Update ControleurMenu.java
+fefadab | Alicia Mestour | 2026-03-28 | Merge pull request #12 from YASSINE7501/main
+b1ea556 | Alicia Mestour | 2026-03-28 | Merge pull request #13 from honolulul/main
+ef30271 | ilyas ter | 2026-03-28 | Add resetBallonPartie and getJoueurActif methods
+bd30b75 | ilyas ter | 2026-03-28 | Refactor Joueur class to use default coordinates
+013bf08 | ilyas ter | 2026-03-28 | Implement main class to launch application
+5e27136 | Benammar | 2026-03-28 | Delete Basketduel/Controlleur/ControleurReseau.java
+777f72f | Benammar | 2026-03-28 | Update ReseauManager.java
+8821331 | Benammar | 2026-03-28 | Update ControleurJeu.java
+06c1ecb | Benammar | 2026-03-28 | Update Terrain.java
+23deb5a | Benammar | 2026-03-28 | Update Panier.java
+8e29ebf | Benammar | 2026-03-28 | Update Ballon.java
+1326eb7 | Benammar | 2026-03-28 | Update Bonus.java
+973e2c1 | Benammar | 2026-03-28 | Update Bonus.java
+a4e7ef5 | Benammar | 2026-03-28 | Update IntelligenceArtificielle.java
+51cd04d | Benammar | 2026-03-28 | Update JoueurIA.java
+8acb365 | Alicia Mestour | 2026-03-27 | Update README.md
+7b721a3 | Alicia Mestour | 2026-03-25 | Merge pull request #10 from Rathissan/main
+45ccfa3 | Rathissan | 2026-03-25 | Refactor TerrainVue to enhance rendering and controls
+46bee6a | Rathissan | 2026-03-25 | Implement game controller with shooting mechanics
+c4bc9aa | Rathissan | 2026-03-25 | Delete ControleurJeu.java
+2d77983 | Rathissan | 2026-03-25 | Delete TerrainVue.java
+3543b29 | Alicia Mestour | 2026-03-25 | Merge pull request #9 from Rathissan/main
+e2541a0 | Rathissan | 2026-03-25 | Add files via upload
+e03175c | Rathissan | 2026-03-25 | Merge branch 'AliciaMSTR:main' into main
+a761138 | Alicia Mestour | 2026-03-25 | Merge pull request #8 from honolulul/main
+a2f62e8 | ilyas ter | 2026-03-25 | Delete Basketduel/Joueur.java
+4a5116f | ilyas ter | 2026-03-25 | Delete Basketduel/Partie.java
+15bb286 | ilyas ter | 2026-03-25 | Update Joueur.java
+5fe0648 | ilyas ter | 2026-03-25 | Update Partie.java
+b903f06 | Alicia Mestour | 2026-03-25 | Merge pull request #7 from honolulul/main
+5013e61 | ilyas ter | 2026-03-25 | Add files via upload
+98ae54f | Alicia Mestour | 2026-03-25 | Merge pull request #6 from YASSINE7501/main
+641c17b | Alicia Mestour | 2026-03-25 | Update README.md
+cd7bbb7 | Benammar | 2026-03-23 | Ajout du système réseaux et IA
+945ccfb | yassine7501 | 2026-03-23 | Nettoyage des fichiers compilés
+78b9246 | yassine7501 | 2026-03-23 | Mise à jour du gitignore
+652d6ae | yassine7501 | 2026-03-23 | Ajout du système réseau et IA
+62515dd | Alicia Mestour | 2026-03-23 | Merge pull request #5 from Rathissan/main
+635a518 | Meruem | 2026-03-23 | Ajout de la partie Physique/Mathematique du jeu
+d703600 | Meruem | 2026-03-23 | Ajout de la partie Physique/Mathematique du jeu
+9805231 | AliciaMSTR | 2026-02-02 | Merge pull request #4 from honolulul/main
+63c57aa | ilyas ter | 2026-02-02 | Remove citation markers from README.md
+23ffe8f | Alicia_Mstr | 2026-02-02 | Ajout du journal Git
 11a01ad | AliciaMSTR | 2026-02-02 | Add files via upload
 42c4c39 | AliciaMSTR | 2026-02-02 | Merge pull request #3 from Rathissan/main
 d20fe2e | AliciaMSTR | 2026-02-02 | Update README.md

@@ -56,7 +56,7 @@ Pour compiler et lancer le jeu :
 *   [x] **Phase 3 : Gameplay & IA** (Tours de jeu, Algorithme IA balistique)
 *   [x] **Phase 4 : Système d'Items** (Bonus, Malus, Murs obstacles)
 *   [x] **Phase 5 : Interface Graphique** (Design moderne, Scaling dynamique)
-*   [ ] **Phase 6 : Réseau** (Finalisation de la synchronisation Sockets)
+*   [x] **Phase 6 : Réseau** (Finalisation de la synchronisation Sockets)
 
 ---
 *Projet réalisé dans le cadre du module de Projet Informatique.*
