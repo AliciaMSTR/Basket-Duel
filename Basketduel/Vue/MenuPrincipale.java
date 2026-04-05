@@ -57,19 +57,19 @@ public class MenuPrincipale extends JFrame {
         panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
         panel.setOpaque(false);
 
-        // ── Titre principal
+        // Titre principal
         JLabel titre = new JLabel("BASKET DUEL");
         titre.setFont(new Font("Arial", Font.BOLD, 48));
         titre.setForeground(new Color(255, 200, 50));
         titre.setAlignmentX(Component.CENTER_ALIGNMENT);
 
-        // ── Sous-titre
+        // Sous-titre
         JLabel sousTitre = new JLabel("Choisissez votre mode de jeu");
         sousTitre.setFont(new Font("Arial", Font.ITALIC, 16));
         sousTitre.setForeground(new Color(180, 180, 200));
         sousTitre.setAlignmentX(Component.CENTER_ALIGNMENT);
 
-        // ── Boutons
+        // Boutons
         boutonCreer = creerBouton("Créer une Partie", new Color(40, 120, 210));
         boutonRejoindre = creerBouton("Rejoindre une Partie", new Color(130, 70, 180));
         boutonQuitter = creerBouton("Quitter", new Color(180, 50, 50));
@@ -87,6 +87,7 @@ public class MenuPrincipale extends JFrame {
 
         // Fond global de la fenêtre
         JPanel root = new JPanel(new BorderLayout()) {
+            private static final long serialVersionUID = 1L;
             @Override
             protected void paintComponent(Graphics g) {
                 Graphics2D g2 = (Graphics2D) g;
@@ -101,11 +102,11 @@ public class MenuPrincipale extends JFrame {
         setContentPane(root);
     }
 
-    /**
-     * Crée un bouton stylisé avec dégradé et effet hover.
-     */
+   
     private JButton creerBouton(String texte, Color couleurBase) {
         JButton btn = new JButton(texte) {
+            private static final long serialVersionUID = 1L;
+
             @Override
             protected void paintComponent(Graphics g) {
                 Graphics2D g2 = (Graphics2D) g;
