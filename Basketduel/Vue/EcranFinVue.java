@@ -27,18 +27,19 @@ public class EcranFinVue extends JFrame {
         String msgGagnant;
         Color couleurGagnant;
         if (s1 > s2) {
-            msgGagnant = "🏆 " + nomJ1 + " remporte la partie !";
+            msgGagnant =  nomJ1 + " remporte la partie !";
             couleurGagnant = new Color(255, 210, 50);
         } else if (s2 > s1) {
-            msgGagnant = "🏆 " + nomJ2 + " remporte la partie !";
+            msgGagnant =  nomJ2 + " remporte la partie !";
             couleurGagnant = new Color(255, 210, 50);
         } else {
-            msgGagnant = "🤝 Égalité parfaite !";
+            msgGagnant = " Égalité parfaite !";
             couleurGagnant = new Color(180, 220, 255);
         }
 
         // Panel principal avec fond dégradé
         JPanel panel = new JPanel() {
+            private static final long serialVersionUID = 1L;      
             @Override
             protected void paintComponent(Graphics g) {
                 Graphics2D g2 = (Graphics2D) g;
@@ -52,14 +53,15 @@ public class EcranFinVue extends JFrame {
         };
         panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
 
-        // ── Titre "FIN DE PARTIE"
+        // Titre "FIN DE PARTIE"
         JLabel titre = new JLabel("FIN DE PARTIE", SwingConstants.CENTER);
         titre.setFont(new Font("Arial", Font.BOLD, 32));
         titre.setForeground(new Color(255, 200, 50));
         titre.setAlignmentX(Component.CENTER_ALIGNMENT);
 
-        // ── Séparateur décoratif
+        // Séparateur décoratif
         JPanel ligne = new JPanel() {
+            private static final long serialVersionUID = 1L;
             @Override protected void paintComponent(Graphics g) {
                 Graphics2D g2 = (Graphics2D) g;
                 g2.setColor(new Color(255, 160, 30));
@@ -70,20 +72,20 @@ public class EcranFinVue extends JFrame {
         ligne.setOpaque(false);
         ligne.setMaximumSize(new Dimension(400, 12));
 
-        // ── Gagnant
+        // Gagnant
         JLabel lblGagnant = new JLabel(msgGagnant, SwingConstants.CENTER);
         lblGagnant.setFont(new Font("Arial", Font.BOLD, 20));
         lblGagnant.setForeground(couleurGagnant);
         lblGagnant.setAlignmentX(Component.CENTER_ALIGNMENT);
 
-        // ── Scores
+        // Scores
         String scoreTxt = nomJ1 + " :  " + s1 + " pts       " + nomJ2 + " :  " + s2 + " pts";
         JLabel lblScores = new JLabel(scoreTxt, SwingConstants.CENTER);
         lblScores.setFont(new Font("Arial", Font.PLAIN, 16));
         lblScores.setForeground(new Color(200, 200, 220));
         lblScores.setAlignmentX(Component.CENTER_ALIGNMENT);
 
-        // ── Boutons
+        // Boutons
         JButton rejouer = creerBoutonFin("Rejouer", new Color(40, 120, 210));
         JButton menuBtn = creerBoutonFin("Menu Principal", new Color(80, 100, 160));
         JButton quitter = creerBoutonFin("Quitter", new Color(180, 50, 50));
@@ -113,6 +115,8 @@ public class EcranFinVue extends JFrame {
 
     private JButton creerBoutonFin(String texte, Color couleur) {
         JButton btn = new JButton(texte) {
+             private static final long serialVersionUID = 1L;
+
             @Override
             protected void paintComponent(Graphics g) {
                 Graphics2D g2 = (Graphics2D) g;
